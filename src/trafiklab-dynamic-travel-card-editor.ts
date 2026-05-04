@@ -10,7 +10,7 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
 
   setConfig(config: DynamicTravelCardConfig) {
     const base: DynamicTravelCardConfig = {
-      type: 'trafiklab-dynamic-travel-card',
+      type: 'custom:trafiklab-dynamic-travel-card',
       home_zone: 'zone.home',
       max_items: 3,
       max_legs: 12,
