@@ -11,7 +11,7 @@
   - Displays trips returned by the trafiklab.travel_search service
 */
 
-import { html, LitElement, nothing, PropertyValues } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { cardStyles } from './style';
 import {
