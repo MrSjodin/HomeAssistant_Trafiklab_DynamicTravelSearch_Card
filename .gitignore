@@ -1,0 +1,6 @@
+node_modules/
+dist/
+!dist/trafiklab-dynamic-travel-card.js
+*.log
+.DS_Store
+*.map
