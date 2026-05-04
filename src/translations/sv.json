@@ -1,0 +1,63 @@
+{
+  "card": {
+    "title": "Trafiklab Dynamisk Resa"
+  },
+  "editor": {
+    "config_entry_id": "Resrobot konfigurations-ID",
+    "api_key": "Resrobot API-nyckel",
+    "my_location_entity": "Min plats-entitet",
+    "home_zone": "Hem-zon entitet",
+    "persons": "Person-entiteter (kommaseparerade)",
+    "zones": "Zon-entiteter (kommaseparerade)",
+    "max_items": "Max antal resor",
+    "max_legs": "Max antal delresor",
+    "show_details": "Visa detaljinformation per delresa",
+    "max_walking_distance": "Max gångavstånd (m)",
+    "help_config_entry_id": "Konfigurations-ID för en Resrobot-sensor (ger API-nyckeln)",
+    "help_api_key": "Direkt Resrobot API-nyckel (alternativ till konfigurations-ID)",
+    "help_my_location_entity": "Person- eller device_tracker-entitet för knappen 'Min plats'",
+    "help_home_zone": "Zon-entitet för Hem-knappen (standard: zone.home)",
+    "help_persons": "Person-entiteter som visas som snabb destinationsknapp",
+    "help_zones": "Zon-entiteter som visas som snabb destinationsknapp",
+    "help_max_items": "Maximalt antal resor som visas",
+    "help_max_legs": "Maximalt antal delresor per resa",
+    "help_show_details": "Visa detaljerad information per delresa (origin, destination, tider)",
+    "help_max_walking_distance": "Maximalt gångavstånd i meter vid origin och destination"
+  },
+  "search": {
+    "origin_label": "Från",
+    "destination_label": "Till",
+    "my_location": "Min plats",
+    "home": "Hem",
+    "type_stop": "Skriv hållplats…",
+    "search_btn": "Sök",
+    "searching": "Söker…",
+    "swap_tooltip": "Byt origin och destination",
+    "placeholder_origin": "Ange hållplats eller adress…",
+    "placeholder_destination": "Ange hållplats eller adress…",
+    "no_results": "Inga resor hittades",
+    "results_title": "Tillgängliga resor"
+  },
+  "label": {
+    "mode_walk": "Gång",
+    "mode_bus": "Buss",
+    "mode_train": "Tåg",
+    "mode_metro": "Tunnelbana",
+    "mode_tram": "Spårvagn",
+    "mode_boat": "Båt",
+    "mode_taxi": "Taxi",
+    "transfer": "Byte",
+    "start": "Start",
+    "end": "Slut",
+    "duration": "{h}t {m}min",
+    "duration_min": "{m}min"
+  },
+  "error": {
+    "search_failed": "Sökning misslyckades: {message}",
+    "no_api_key": "Ingen Resrobot API-nyckel konfigurerad. Ange config_entry_id eller api_key i kortets inställningar.",
+    "origin_required": "Ange en origin",
+    "destination_required": "Ange en destination",
+    "my_location_not_configured": "Ingen plats-entitet konfigurerad. Ange my_location_entity i kortets inställningar.",
+    "my_location_unavailable": "Platsen för '{entity}' är inte tillgänglig"
+  }
+}

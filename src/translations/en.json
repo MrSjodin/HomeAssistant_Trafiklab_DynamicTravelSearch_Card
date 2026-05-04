@@ -1,0 +1,63 @@
+{
+  "card": {
+    "title": "Trafiklab Dynamic Travel"
+  },
+  "editor": {
+    "config_entry_id": "Resrobot config entry ID",
+    "api_key": "Resrobot API key",
+    "my_location_entity": "My Location entity",
+    "home_zone": "Home zone entity",
+    "persons": "Person entities (comma-separated)",
+    "zones": "Zone entities (comma-separated)",
+    "max_items": "Max trips",
+    "max_legs": "Max legs per trip",
+    "show_details": "Show per-leg details",
+    "max_walking_distance": "Max walking distance (m)",
+    "help_config_entry_id": "Config entry ID of a Resrobot travel sensor (provides the API key)",
+    "help_api_key": "Direct Resrobot API key (alternative to config entry ID)",
+    "help_my_location_entity": "Person or device_tracker entity used for 'My Location' button",
+    "help_home_zone": "Zone entity for the Home button (default: zone.home)",
+    "help_persons": "Person entities shown as quick destination buttons",
+    "help_zones": "Zone entities shown as quick destination buttons",
+    "help_max_items": "Maximum number of trips to display",
+    "help_max_legs": "Maximum number of legs rendered per trip",
+    "help_show_details": "Show detailed leg information (origin, destination, times)",
+    "help_max_walking_distance": "Maximum walking distance in metres at origin and destination"
+  },
+  "search": {
+    "origin_label": "From",
+    "destination_label": "To",
+    "my_location": "My Location",
+    "home": "Home",
+    "type_stop": "Type stop…",
+    "search_btn": "Search",
+    "searching": "Searching…",
+    "swap_tooltip": "Swap origin and destination",
+    "placeholder_origin": "Enter stop name or address…",
+    "placeholder_destination": "Enter stop name or address…",
+    "no_results": "No trips found",
+    "results_title": "Available trips"
+  },
+  "label": {
+    "mode_walk": "Walk",
+    "mode_bus": "Bus",
+    "mode_train": "Train",
+    "mode_metro": "Metro",
+    "mode_tram": "Tram",
+    "mode_boat": "Ferry",
+    "mode_taxi": "Taxi",
+    "transfer": "Transfer",
+    "start": "Start",
+    "end": "End",
+    "duration": "{h}h {m}min",
+    "duration_min": "{m}min"
+  },
+  "error": {
+    "search_failed": "Search failed: {message}",
+    "no_api_key": "No Resrobot API key configured. Set config_entry_id or api_key in card config.",
+    "origin_required": "Please specify an origin",
+    "destination_required": "Please specify a destination",
+    "my_location_not_configured": "No location entity configured. Set my_location_entity in card config.",
+    "my_location_unavailable": "Location of '{entity}' is not available"
+  }
+}
