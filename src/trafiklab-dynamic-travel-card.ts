@@ -401,6 +401,11 @@ export class TrafiklabDynamicTravelCard extends LitElement {
             title="${t('search.swap_tooltip')}"
             @click=${this._swap}
           >${this._renderIcon(arrowSwap)}</button>
+        </div>
+
+        ${this._renderDestinationSection()}
+
+        <div class="search-row">
           <button
             class="search-btn"
             ?disabled=${this._loading}
@@ -410,8 +415,6 @@ export class TrafiklabDynamicTravelCard extends LitElement {
             ${this._loading ? t('search.searching') : t('search.search_btn')}
           </button>
         </div>
-
-        ${this._renderDestinationSection()}
 
         ${this._error
           ? html`<div class="error-row">${this._error}</div>`
@@ -604,38 +607,26 @@ export class TrafiklabDynamicTravelCard extends LitElement {
 
     const firstLeg = legs[0];
     const lastLeg = legs[legs.length - 1];
-    const startStop = firstLeg ? TrafiklabDynamicTravelCard._fromStop(firstLeg) : undefined;
-    const endStop = lastLeg ? TrafiklabDynamicTravelCard._toStop(lastLeg) : undefined;
     const depTime = firstLeg ? (firstLeg.departure || firstLeg.origin_time) : undefined;
     const arrTime = lastLeg ? (lastLeg.arrival || lastLeg.dest_time) : undefined;
 
     return html`
       <div class="trip">
-        ${startStop
-          ? html`<span class="leg-endpoint start">
-              ${this._renderIcon(mapMarker)}
-              ${startStop.name || this.t('label.start')}
-              ${depTime ? html` <span class="muted">${this._shortTime(depTime)}</span>` : nothing}
-            </span>`
-          : nothing}
-
         ${shown.map((leg, i) => {
           if (leg === null) return html`<span class="arrow">${this._renderIcon('mdi:dots-horizontal')}</span>`;
+          if (i === 0) {
+            return html`
+              ${depTime ? html`<span class="trip-time">${this._shortTime(depTime)}</span>` : nothing}
+              ${this._renderLeg(leg as Leg)}
+            `;
+          }
           return html`
             <span class="arrow">${this._renderIcon(arrowRight)}</span>
             ${this._renderLeg(leg as Leg)}
           `;
         })}
 
-        ${endStop
-          ? html`
-            <span class="arrow">${this._renderIcon(arrowRight)}</span>
-            <span class="leg-endpoint end">
-              ${this._renderIcon(mapMarker)}
-              ${endStop.name || this.t('label.end')}
-              ${arrTime ? html` <span class="muted">${this._shortTime(arrTime)}</span>` : nothing}
-            </span>`
-          : nothing}
+        ${arrTime ? html`<span class="trip-time">${this._shortTime(arrTime)}</span>` : nothing}
 
         ${trip.duration != null
           ? html`<div class="trip-meta">${this._formatDuration(trip.duration)}</div>`

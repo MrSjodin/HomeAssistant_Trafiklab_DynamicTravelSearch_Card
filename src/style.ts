@@ -117,13 +117,18 @@ export const cardStyles = css`
     color: var(--secondary-text-color);
   }
 
-  /* ── Swap & Search row ── */
+  /* ── Swap row ── */
   .action-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 8px;
-    margin: 4px 0 12px 0;
+    margin: 4px 0 4px 0;
+  }
+  /* ── Search row ── */
+  .search-row {
+    display: flex;
+    margin: 12px 0 8px 0;
   }
   .swap-btn {
     display: inline-flex;
@@ -147,6 +152,7 @@ export const cardStyles = css`
     gap: 6px;
     flex: 1;
     justify-content: center;
+    width: 100%;
     padding: 10px 16px;
     border-radius: 8px;
     border: none;
@@ -248,6 +254,12 @@ export const cardStyles = css`
   }
   .arrow ha-icon {
     --mdc-icon-size: 16px;
+  }
+  .trip-time {
+    font-size: var(--tl-font-size-leg, 0.85em);
+    font-weight: 600;
+    color: var(--secondary-text-color);
+    padding: 0 2px;
   }
   .trip-meta {
     width: 100%;
