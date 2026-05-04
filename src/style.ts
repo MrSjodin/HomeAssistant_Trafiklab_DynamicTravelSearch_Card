@@ -210,6 +210,15 @@ export const cardStyles = css`
     padding: 8px 10px;
     border-radius: 10px;
     background: var(--secondary-background-color, rgba(0,0,0,0.03));
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .trip:hover {
+    background: var(--secondary-background-color, rgba(0,0,0,0.06));
+  }
+  .trip--expanded {
+    background: var(--secondary-background-color, rgba(0,0,0,0.05));
   }
   .leg {
     display: inline-flex;
@@ -266,6 +275,47 @@ export const cardStyles = css`
     font-size: var(--tl-font-size-details, 0.8em);
     color: var(--secondary-text-color);
     margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .trip-chevron {
+    display: inline-flex;
+    align-items: center;
+    color: var(--secondary-text-color);
+    opacity: 0.6;
+    transition: transform 0.2s ease;
+    margin-left: auto;
+  }
+  .trip-chevron ha-icon {
+    --mdc-icon-size: 16px;
+  }
+  .trip-chevron.open {
+    transform: rotate(180deg);
+  }
+  .trip-stops {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0px 1px;
+    font-size: 0.78em;
+    color: var(--secondary-text-color);
+    margin-top: 5px;
+    line-height: 1.5;
+  }
+  .trip-stops-sep {
+    color: var(--secondary-text-color);
+    opacity: 0.45;
+    padding: 0 2px;
+    flex-shrink: 0;
+  }
+  .trip-stop-name {
+    white-space: nowrap;
+  }
+  .trip-stop-endpoint {
+    font-weight: 600;
+    color: var(--primary-text-color);
   }
   .trip-detail {
     margin-top: 6px;
@@ -289,5 +339,109 @@ export const cardStyles = css`
     color: var(--secondary-text-color);
     font-size: 0.9em;
     padding: 8px;
+  }
+
+  /* ── Trip expanded timeline ── */
+  .trip-expand {
+    width: 100%;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--divider-color, rgba(0,0,0,0.08));
+    animation: tl-slide-in 0.18s ease;
+    overflow: hidden;
+  }
+  @keyframes tl-slide-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .tl {
+    display: grid;
+    grid-template-columns: 42px 14px 1fr;
+  }
+  .tl-time {
+    font-size: 0.78em;
+    font-weight: 600;
+    color: var(--primary-text-color);
+    text-align: right;
+    padding-right: 7px;
+    padding-top: 4px;
+    line-height: 1;
+  }
+  .tl-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .tl-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .tl-dot-start {
+    background: var(--success-color, #43a047);
+  }
+  .tl-dot-end {
+    background: var(--primary-color);
+  }
+  .tl-dot-mid {
+    background: var(--secondary-text-color);
+    opacity: 0.5;
+    width: 8px;
+    height: 8px;
+    margin-top: 4px;
+  }
+  .tl-line-seg {
+    width: 2px;
+    flex: 1;
+    background: var(--divider-color, rgba(0,0,0,0.2));
+    min-height: 8px;
+  }
+  .tl-stop-cell {
+    padding: 1px 0 7px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+  }
+  .tl-stop-name {
+    font-size: 0.88em;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--primary-text-color);
+  }
+  .tl-leg-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 0 2px 8px;
+    font-size: 0.8em;
+    color: var(--secondary-text-color);
+  }
+  .tl-leg-cell ha-icon {
+    --mdc-icon-size: 15px;
+  }
+  .tl-leg-line {
+    font-weight: 600;
+    color: var(--primary-text-color);
+  }
+  .tl-leg-meta {
+    color: var(--secondary-text-color);
+  }
+  .tl-leg-dir {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 160px;
+  }
+  .tl-transfer-badge {
+    display: inline-block;
+    font-size: 0.78em;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+    background: var(--secondary-background-color, rgba(0,0,0,0.06));
+    border-radius: 10px;
+    padding: 1px 7px;
   }
 `;

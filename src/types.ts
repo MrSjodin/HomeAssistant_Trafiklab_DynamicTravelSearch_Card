@@ -69,6 +69,12 @@ export type Leg = {
   origin?: StopLike;
   to?: StopLike;
   destination?: StopLike;
+  /** Flat string origin name (used by Trafiklab integration response). */
+  origin_name?: string;
+  /** Flat string destination name (used by Trafiklab integration response). */
+  dest_name?: string;
+  /** Headsign / direction of the vehicle. */
+  direction?: string;
   departure?: string;
   origin_time?: string;
   arrival?: string;
@@ -88,6 +94,8 @@ export type StopLike = {
 export interface Trip {
   legs?: Leg[];
   duration?: number;
+  /** Total duration in minutes (used by Trafiklab integration response). */
+  duration_total?: number;
 }
 
 export interface StopSuggestion {

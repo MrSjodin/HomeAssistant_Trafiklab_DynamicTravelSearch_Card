@@ -75,6 +75,9 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   @state() private _loading = false;
   @state() private _error: string | null = null;
   @state() private _hasSearched = false;
+  @state() private _expandedTripIndex: number | null = null;
+  @state() private _originLabel = '';
+  @state() private _destLabel = '';
 
   private _originLookup = debounce((q: string) => this._stopLookup(q, 'origin'), 500);
   private _destLookup = debounce((q: string) => this._stopLookup(q, 'dest'), 500);
@@ -325,9 +328,28 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       }
     }
 
+    // Compute display labels so coordinate-only names can be replaced in results
+    if (this._originMode === 'my_location') {
+      this._originLabel = this.t('search.my_location');
+    } else if (this._originMode === 'zone') {
+      this._originLabel = this._zoneName(this._originZoneEntity);
+    } else {
+      this._originLabel = this._originText.trim();
+    }
+    if (this._destMode === 'home') {
+      this._destLabel = this._zoneName(this._config.home_zone || 'zone.home');
+    } else if (this._destMode === 'person') {
+      this._destLabel = this._entityName(this._destPersonEntity);
+    } else if (this._destMode === 'zone') {
+      this._destLabel = this._zoneName(this._destZoneEntity);
+    } else {
+      this._destLabel = this._destText.trim();
+    }
+
     this._loading = true;
     this._trips = [];
     this._hasSearched = false;
+    this._expandedTripIndex = null;
 
     try {
       const serviceData: Record<string, unknown> = {
@@ -593,13 +615,13 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       <div>
         <div class="results-header">${t('search.results_title')}</div>
         <div class="trip-list">
-          ${this._trips.map(trip => this._renderTrip(trip, maxLegs))}
+          ${this._trips.map((trip, index) => this._renderTrip(trip, maxLegs, index))}
         </div>
       </div>
     `;
   }
 
-  private _renderTrip(trip: Trip, maxLegs: number) {
+  private _renderTrip(trip: Trip, maxLegs: number, index: number) {
     const legs = (trip.legs ?? []).filter(Boolean);
     const shown = legs.length > maxLegs
       ? [...legs.slice(0, Math.ceil(maxLegs / 2)), null, ...legs.slice(legs.length - Math.floor(maxLegs / 2))]
@@ -609,9 +631,10 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     const lastLeg = legs[legs.length - 1];
     const depTime = firstLeg ? (firstLeg.departure || firstLeg.origin_time) : undefined;
     const arrTime = lastLeg ? (lastLeg.arrival || lastLeg.dest_time) : undefined;
+    const isExpanded = this._expandedTripIndex === index;
 
     return html`
-      <div class="trip">
+      <div class="trip ${isExpanded ? 'trip--expanded' : ''}" @click=${() => this._toggleTripExpand(index)}>
         ${shown.map((leg, i) => {
           if (leg === null) return html`<span class="arrow">${this._renderIcon('mdi:dots-horizontal')}</span>`;
           if (i === 0) {
@@ -628,11 +651,39 @@ export class TrafiklabDynamicTravelCard extends LitElement {
 
         ${arrTime ? html`<span class="trip-time">${this._shortTime(arrTime)}</span>` : nothing}
 
-        ${trip.duration != null
-          ? html`<div class="trip-meta">${this._formatDuration(trip.duration)}</div>`
-          : nothing}
+        <div class="trip-meta">
+          ${(trip.duration ?? trip.duration_total) != null ? html`<span>${this._formatDuration(trip.duration ?? trip.duration_total!)}</span>` : nothing}
+          <span class="trip-chevron ${isExpanded ? 'open' : ''}">${this._renderIcon('mdi:chevron-down')}</span>
+        </div>
 
-        ${this._config.show_details ? this._renderTripDetail(legs) : nothing}
+        ${this._config.show_details && !isExpanded ? this._renderTripDetail(legs) : nothing}
+
+        ${isExpanded ? this._renderTripExpanded(legs) : nothing}
+      </div>
+    `;
+  }
+
+  private _toggleTripExpand(index: number) {
+    this._expandedTripIndex = this._expandedTripIndex === index ? null : index;
+  }
+
+  private _renderTripStops(legs: Leg[]) {
+    if (!legs.length) return nothing;
+    const stops: string[] = [];
+    const firstFrom = TrafiklabDynamicTravelCard._fromStop(legs[0]);
+    if (firstFrom?.name) stops.push(firstFrom.name);
+    for (const leg of legs) {
+      const to = TrafiklabDynamicTravelCard._toStop(leg);
+      if (to?.name) stops.push(to.name);
+    }
+    if (stops.length < 2) return nothing;
+    const last = stops.length - 1;
+    return html`
+      <div class="trip-stops">
+        ${stops.map((name, i) => html`
+          ${i > 0 ? html`<span class="trip-stops-sep">›</span>` : nothing}
+          <span class="trip-stop-name ${i === 0 || i === last ? 'trip-stop-endpoint' : ''}">${name}</span>
+        `)}
       </div>
     `;
   }
@@ -648,6 +699,100 @@ export class TrafiklabDynamicTravelCard extends LitElement {
         <span class="line">${label || '—'}</span>
       </span>
     `;
+  }
+
+  private _renderTripExpanded(legs: Leg[]) {
+    if (!legs.length) return nothing;
+
+    const firstLeg = legs[0];
+    const firstFrom = TrafiklabDynamicTravelCard._fromStop(firstLeg);
+    const firstDep = firstLeg.departure || firstLeg.origin_time;
+
+    return html`
+      <div class="trip-expand">
+        <div class="tl">
+          <!-- start stop -->
+          <div class="tl-time">${firstDep ? this._shortTime(firstDep) : ''}</div>
+          <div class="tl-node">
+            <div class="tl-dot tl-dot-start"></div>
+            <div class="tl-line-seg"></div>
+          </div>
+          <div class="tl-stop-cell">
+            <span class="tl-stop-name">${this._resolveStopDisplay(firstFrom?.name, 'origin')}</span>
+          </div>
+
+          ${legs.map((leg, i) => {
+            const isLast = i === legs.length - 1;
+            const to = TrafiklabDynamicTravelCard._toStop(leg);
+            const arr = leg.arrival || leg.dest_time;
+            const nextLeg = !isLast ? legs[i + 1] : undefined;
+            const nextDep = nextLeg ? (nextLeg.departure || nextLeg.origin_time) : undefined;
+            const transferMin = !isLast ? this._calcTransfer(arr, nextDep) : null;
+
+            const type = TrafiklabDynamicTravelCard._legType(leg);
+            const line = TrafiklabDynamicTravelCard._legLine(leg);
+            const isWalk = /walk|foot|gå/.test(type);
+            const distance = (leg as any).distance as number | undefined;
+            const duration = leg.duration;
+
+            return html`
+              <!-- leg connector -->
+              <div class="tl-time"></div>
+              <div class="tl-node tl-node-line">
+                <div class="tl-line-seg"></div>
+              </div>
+              <div class="tl-leg-cell">
+                ${this._renderIcon(modeIcon(type))}
+                ${line ? html`<span class="tl-leg-line">${line}</span>` : nothing}
+                ${leg.direction ? html`<span class="tl-leg-meta tl-leg-dir">→ ${leg.direction}</span>` : nothing}
+                ${isWalk && distance ? html`<span class="tl-leg-meta">${this._formatDistance(distance)}</span>` : nothing}
+                ${duration != null ? html`<span class="tl-leg-meta">${this._formatDuration(duration)}</span>` : nothing}
+              </div>
+
+              <!-- arrival / intermediate stop -->
+              <div class="tl-time">${arr ? this._shortTime(arr) : ''}</div>
+              <div class="tl-node">
+                <div class="tl-dot ${isLast ? 'tl-dot-end' : 'tl-dot-mid'}"></div>
+                ${!isLast ? html`<div class="tl-line-seg"></div>` : nothing}
+              </div>
+              <div class="tl-stop-cell">
+                <span class="tl-stop-name">${this._resolveStopDisplay(to?.name, isLast ? 'dest' : undefined)}</span>
+                ${transferMin != null && transferMin > 0
+                  ? html`<span class="tl-transfer-badge">${this.t('label.transfer')} · ${this._formatDuration(transferMin)}</span>`
+                  : nothing}
+              </div>
+            `;
+          })}
+        </div>
+      </div>
+    `;
+  }
+
+  private _resolveStopDisplay(name?: string, role?: 'origin' | 'dest'): string {
+    if (!name) return '—';
+    if (/^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(name.trim())) {
+      if (role === 'origin') return this._originLabel || name;
+      if (role === 'dest') return this._destLabel || name;
+    }
+    return name;
+  }
+
+  private _calcTransfer(arrStr?: string, depStr?: string): number | null {
+    if (!arrStr || !depStr) return null;
+    try {
+      const arr = new Date(arrStr).getTime();
+      const dep = new Date(depStr).getTime();
+      if (isNaN(arr) || isNaN(dep)) return null;
+      const diff = Math.round((dep - arr) / 60000);
+      return diff > 0 ? diff : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  private _formatDistance(m: number): string {
+    if (m >= 1000) return `${(m / 1000).toFixed(1)} km`;
+    return `${Math.round(m)} m`;
   }
 
   private _renderTripDetail(legs: Leg[]) {
@@ -692,11 +837,17 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   }
 
   private static _fromStop(leg: Leg): StopLike | undefined {
-    return TrafiklabDynamicTravelCard._stop((leg as any).from || (leg as any).origin);
+    const obj = (leg as any).from || leg.origin;
+    if (obj && typeof obj === 'object') return TrafiklabDynamicTravelCard._stop(obj);
+    if (leg.origin_name) return { name: leg.origin_name };
+    return undefined;
   }
 
   private static _toStop(leg: Leg): StopLike | undefined {
-    return TrafiklabDynamicTravelCard._stop((leg as any).to || (leg as any).destination);
+    const obj = (leg as any).to || leg.destination;
+    if (obj && typeof obj === 'object') return TrafiklabDynamicTravelCard._stop(obj);
+    if (leg.dest_name) return { name: leg.dest_name };
+    return undefined;
   }
 
   private _prettyType(t?: string): string {
