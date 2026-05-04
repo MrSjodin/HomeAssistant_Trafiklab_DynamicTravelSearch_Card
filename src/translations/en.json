@@ -29,6 +29,8 @@
     "destination_label": "To",
     "my_location": "My Location",
     "home": "Home",
+    "zone": "Zone",
+    "select_zone": "Select zone…",
     "type_stop": "Type stop…",
     "search_btn": "Search",
     "searching": "Searching…",

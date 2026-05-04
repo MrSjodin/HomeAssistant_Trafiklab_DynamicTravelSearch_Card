@@ -63,7 +63,8 @@ export const cardStyles = css`
   .text-input-wrap {
     position: relative;
   }
-  .stop-input {
+  .stop-input,
+  select.stop-input {
     width: 100%;
     box-sizing: border-box;
     padding: 8px 10px;
@@ -76,7 +77,8 @@ export const cardStyles = css`
     outline: none;
     transition: border-color 0.15s;
   }
-  .stop-input:focus {
+  .stop-input:focus,
+  select.stop-input:focus {
     border-color: var(--primary-color);
   }
   .suggestions {

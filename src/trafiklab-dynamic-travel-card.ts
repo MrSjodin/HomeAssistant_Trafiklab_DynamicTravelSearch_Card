@@ -36,7 +36,7 @@ const CARD_TYPE = 'trafiklab-dynamic-travel-card';
 const CARD_NAME = 'Trafiklab Dynamic Travel Search';
 const CARD_DESC = 'Dynamically search for public transport journeys using the Trafiklab integration.';
 
-type OriginMode = 'my_location' | 'text';
+type OriginMode = 'my_location' | 'zone' | 'text';
 type DestMode = 'home' | 'person' | 'zone' | 'text';
 
 // Debounce helper
@@ -58,6 +58,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   @state() private _originMode: OriginMode = 'my_location';
   @state() private _originText = '';
   @state() private _originStopId: string | null = null;
+  @state() private _originZoneEntity = '';
   @state() private _originSuggestions: StopSuggestion[] = [];
   @state() private _originSuggestionsOpen = false;
 
@@ -206,6 +207,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     const prevOriginMode = this._originMode;
     const prevOriginText = this._originText;
     const prevOriginStopId = this._originStopId;
+    const prevOriginZoneEntity = this._originZoneEntity;
 
     const prevDestMode = this._destMode;
     const prevDestText = this._destText;
@@ -218,8 +220,11 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       this._originMode = 'text';
       this._originText = prevDestText;
       this._originStopId = prevDestStopId;
+    } else if (prevDestMode === 'zone') {
+      this._originMode = 'zone';
+      this._originZoneEntity = prevDestZoneEntity;
     } else {
-      // home / person / zone → switch origin to 'my_location' or text
+      // home / person → switch origin to 'my_location' or text
       this._originMode = 'my_location';
     }
     this._originSuggestions = [];
@@ -230,6 +235,9 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       this._destMode = 'text';
       this._destText = '';
       this._destStopId = null;
+    } else if (prevOriginMode === 'zone') {
+      this._destMode = 'zone';
+      this._destZoneEntity = prevOriginZoneEntity;
     } else {
       this._destMode = 'text';
       this._destText = prevOriginText;
@@ -240,7 +248,6 @@ export class TrafiklabDynamicTravelCard extends LitElement {
 
     // Reset unused destination fields
     this._destPersonEntity = prevDestPersonEntity;
-    this._destZoneEntity = prevDestZoneEntity;
   }
 
   // ─────────────────────────────────────────
@@ -262,6 +269,13 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       }
       originValue = entity;
       originType = 'person';
+    } else if (this._originMode === 'zone') {
+      if (!this._originZoneEntity) {
+        this._error = this.t('error.origin_required');
+        return;
+      }
+      originValue = this._originZoneEntity;
+      originType = 'zone';
     } else {
       if (!this._originText.trim()) {
         this._error = this.t('error.origin_required');
@@ -351,6 +365,22 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   }
 
   // ─────────────────────────────────────────
+  // Zone helpers
+  // ─────────────────────────────────────────
+
+  /** Returns all zone.* entities from HA, sorted by friendly name. */
+  private _availableZones(): Array<{ entity_id: string; name: string }> {
+    if (!this.hass?.states) return [];
+    return Object.keys(this.hass.states)
+      .filter(id => id.startsWith('zone.'))
+      .map(id => ({
+        entity_id: id,
+        name: this.hass.states[id].attributes?.friendly_name || id.split('.').pop() || id,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // ─────────────────────────────────────────
   // Render
   // ─────────────────────────────────────────
 
@@ -394,9 +424,8 @@ export class TrafiklabDynamicTravelCard extends LitElement {
 
   private _renderOriginSection() {
     const t = (p: string) => this.t(p);
-    const persons = this._config.persons ?? [];
-    const zones = this._config.zones ?? [];
     const hasMyLocation = !!this._config.my_location_entity;
+    const zones = this._availableZones();
 
     return html`
       <div class="search-section">
@@ -409,10 +438,27 @@ export class TrafiklabDynamicTravelCard extends LitElement {
               >${this._renderIcon(iconPerson)} ${t('search.my_location')}</button>`
             : nothing}
           <button
+            class="quick-btn ${this._originMode === 'zone' ? 'active' : ''}"
+            @click=${() => { this._originMode = 'zone'; }}
+          >${this._renderIcon(iconZone)} ${t('search.zone')}</button>
+          <button
             class="quick-btn ${this._originMode === 'text' ? 'active' : ''}"
             @click=${() => { this._originMode = 'text'; }}
           >${this._renderIcon(iconSearch)} ${t('search.type_stop')}</button>
         </div>
+
+        ${this._originMode === 'zone'
+          ? html`
+            <select
+              class="stop-input"
+              @change=${(e: Event) => { this._originZoneEntity = (e.target as HTMLSelectElement).value; }}
+            >
+              <option value="" ?selected=${!this._originZoneEntity}>${t('search.select_zone')}</option>
+              ${zones.map(z => html`
+                <option value=${z.entity_id} ?selected=${this._originZoneEntity === z.entity_id}>${z.name}</option>
+              `)}
+            </select>`
+          : nothing}
 
         ${this._originMode === 'text'
           ? html`
@@ -453,7 +499,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   private _renderDestinationSection() {
     const t = (p: string) => this.t(p);
     const persons = this._config.persons ?? [];
-    const zones = this._config.zones ?? [];
+    const zones = this._availableZones();
 
     return html`
       <div class="search-section">
@@ -471,18 +517,29 @@ export class TrafiklabDynamicTravelCard extends LitElement {
             >${this._renderIcon(iconPerson)} ${this._entityName(p)}</button>
           `)}
 
-          ${zones.map(z => html`
-            <button
-              class="quick-btn ${this._destMode === 'zone' && this._destZoneEntity === z ? 'active' : ''}"
-              @click=${() => { this._destMode = 'zone'; this._destZoneEntity = z; }}
-            >${this._renderIcon(iconZone)} ${this._zoneName(z)}</button>
-          `)}
+          <button
+            class="quick-btn ${this._destMode === 'zone' ? 'active' : ''}"
+            @click=${() => { this._destMode = 'zone'; }}
+          >${this._renderIcon(iconZone)} ${t('search.zone')}</button>
 
           <button
             class="quick-btn ${this._destMode === 'text' ? 'active' : ''}"
             @click=${() => { this._destMode = 'text'; }}
           >${this._renderIcon(iconSearch)} ${t('search.type_stop')}</button>
         </div>
+
+        ${this._destMode === 'zone'
+          ? html`
+            <select
+              class="stop-input"
+              @change=${(e: Event) => { this._destZoneEntity = (e.target as HTMLSelectElement).value; }}
+            >
+              <option value="" ?selected=${!this._destZoneEntity}>${t('search.select_zone')}</option>
+              ${zones.map(z => html`
+                <option value=${z.entity_id} ?selected=${this._destZoneEntity === z.entity_id}>${z.name}</option>
+              `)}
+            </select>`
+          : nothing}
 
         ${this._destMode === 'text'
           ? html`

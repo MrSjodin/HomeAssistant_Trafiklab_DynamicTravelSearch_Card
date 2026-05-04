@@ -29,6 +29,8 @@
     "destination_label": "Till",
     "my_location": "Min plats",
     "home": "Hem",
+    "zone": "Zon",
+    "select_zone": "Välj zon…",
     "type_stop": "Skriv hållplats…",
     "search_btn": "Sök",
     "searching": "Söker…",
