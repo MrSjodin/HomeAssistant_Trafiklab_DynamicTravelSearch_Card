@@ -590,17 +590,21 @@ export class TrafiklabDynamicTravelCard extends LitElement {
           ? html`<div class="card-header">${this._config.title}</div>`
           : nothing}
 
-        ${this._renderOriginSection()}
+        <div class="search-box">
+          ${this._renderOriginSection()}
+        </div>
 
         <div class="action-row">
           <button
             class="swap-btn"
             title="${t('search.swap_tooltip')}"
             @click=${this._swap}
-          >${this._renderIcon(arrowSwap)}</button>
+          >${this._renderIcon(arrowSwap)} ${t('search.swap_btn')}</button>
         </div>
 
-        ${this._renderDestinationSection()}
+        <div class="search-box">
+          ${this._renderDestinationSection()}
+        </div>
 
         <div class="search-row">
           <button
@@ -841,7 +845,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
           if (leg === null) return html`<span class="arrow">${this._renderIcon('mdi:dots-horizontal')}</span>`;
           if (i === 0) {
             return html`
-              ${depTime ? html`<span class="trip-time">${this._shortTime(depTime)}</span>` : nothing}
+              ${depTime ? html`<span class="trip-time trip-time--dep">${this._renderIcon('mdi:clock-start')}${this._shortTime(depTime)}</span>` : nothing}
               ${this._renderLeg(leg as Leg)}
             `;
           }
@@ -851,7 +855,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
           `;
         })}
 
-        ${arrTime ? html`<span class="trip-time">${this._shortTime(arrTime)}</span>` : nothing}
+        ${arrTime ? html`<span class="trip-time trip-time--arr">${this._renderIcon('mdi:clock-end')}${this._shortTime(arrTime)}</span>` : nothing}
 
         <div class="trip-meta">
           ${(trip.duration ?? trip.duration_total) != null ? html`<span>${this._formatDuration(trip.duration ?? trip.duration_total!)}</span>` : nothing}
