@@ -97,7 +97,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       home_zone: 'zone.home',
       max_items: 3,
       max_legs: 12,
-      show_details: false,
+      include_platform: false,
       max_walking_distance: 1000,
       ...config,
     };
@@ -124,7 +124,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       home_zone: 'zone.home',
       max_items: 3,
       max_legs: 12,
-      show_details: false,
+      include_platform: false,
       max_walking_distance: 1000,
     };
   }
@@ -534,6 +534,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
         destination_type: destinationType,
         max_walking_distance: this._config.max_walking_distance ?? 1000,
       };
+      if (this._config.include_platform) serviceData['include_platform'] = true;
       if (this._config.config_entry_id) serviceData['config_entry_id'] = this._config.config_entry_id;
       if (this._config.api_key) serviceData['api_key'] = this._config.api_key;
 
@@ -862,8 +863,6 @@ export class TrafiklabDynamicTravelCard extends LitElement {
           <span class="trip-chevron ${isExpanded ? 'open' : ''}">${this._renderIcon('mdi:chevron-down')}</span>
         </div>
 
-        ${this._config.show_details && !isExpanded ? this._renderTripDetail(legs) : nothing}
-
         ${isExpanded ? this._renderTripExpanded(legs) : nothing}
       </div>
     `;
@@ -925,6 +924,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
           </div>
           <div class="tl-stop-cell">
             <span class="tl-stop-name">${this._resolveStopDisplay(firstFrom?.name, 'origin')}</span>
+            ${this._config.include_platform && firstLeg.platform ? html`<span class="tl-platform-badge">${this.t('label.platform')} ${firstLeg.platform}</span>` : nothing}
           </div>
 
           ${legs.map((leg, i) => {
@@ -966,6 +966,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
                 ${transferMin != null && transferMin > 0
                   ? html`<span class="tl-transfer-badge">${this.t('label.transfer')} · ${this._formatDuration(transferMin)}</span>`
                   : nothing}
+                ${this._config.include_platform && nextLeg?.platform ? html`<span class="tl-platform-badge">${this.t('label.platform')} ${nextLeg.platform}</span>` : nothing}
               </div>
             `;
           })}
@@ -999,22 +1000,6 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   private _formatDistance(m: number): string {
     if (m >= 1000) return `${(m / 1000).toFixed(1)} km`;
     return `${Math.round(m)} m`;
-  }
-
-  private _renderTripDetail(legs: Leg[]) {
-    return html`
-      <div class="trip-detail">
-        ${legs.map(l => {
-          const from = TrafiklabDynamicTravelCard._fromStop(l);
-          const to = TrafiklabDynamicTravelCard._toStop(l);
-          const dep = (l.departure || l.origin_time) ? this._shortTime(l.departure || l.origin_time!) : undefined;
-          const arr = (l.arrival || l.dest_time) ? this._shortTime(l.arrival || l.dest_time!) : undefined;
-          const type = this._prettyType(TrafiklabDynamicTravelCard._legType(l));
-          const line = TrafiklabDynamicTravelCard._legLine(l);
-          return html`<div>• ${type}${line ? ` ${line}` : ''}: ${from?.name || '—'} ${dep ? `(${dep})` : ''} → ${to?.name || '—'} ${arr ? `(${arr})` : ''}</div>`;
-        })}
-      </div>
-    `;
   }
 
   // ─────────────────────────────────────────
