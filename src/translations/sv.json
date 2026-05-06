@@ -36,6 +36,7 @@
     "type_stop": "Skriv hållplats…",
     "search_btn": "Sök",
     "searching": "Söker…",
+    "swap_btn": "Byt",
     "swap_tooltip": "Byt origin och destination",
     "placeholder_origin": "Ange hållplats eller adress…",
     "placeholder_destination": "Ange hållplats eller adress…",

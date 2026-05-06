@@ -36,6 +36,7 @@
     "type_stop": "Type stop…",
     "search_btn": "Search",
     "searching": "Searching…",
+    "swap_btn": "Swap",
     "swap_tooltip": "Swap origin and destination",
     "placeholder_origin": "Enter stop name or address…",
     "placeholder_destination": "Enter stop name or address…",
