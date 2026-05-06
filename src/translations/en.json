@@ -29,6 +29,8 @@
     "destination_label": "To",
     "my_location": "My Location",
     "home": "Home",
+    "gps_location": "My Location",
+    "get_gps": "Get my location",
     "zone": "Zone",
     "select_zone": "Select zone…",
     "type_stop": "Type stop…",
@@ -60,6 +62,7 @@
     "origin_required": "Please specify an origin",
     "destination_required": "Please specify a destination",
     "my_location_not_configured": "No location entity configured. Set my_location_entity in card config.",
-    "my_location_unavailable": "Location of '{entity}' is not available"
+    "my_location_unavailable": "Location of '{entity}' is not available",
+    "gps_unavailable": "Could not get your device location. Please allow location access and try again."
   }
 }

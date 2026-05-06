@@ -29,6 +29,8 @@
     "destination_label": "Till",
     "my_location": "Min plats",
     "home": "Hem",
+    "gps_location": "Min Plats",
+    "get_gps": "Hämta min plats",
     "zone": "Zon",
     "select_zone": "Välj zon…",
     "type_stop": "Skriv hållplats…",
@@ -60,6 +62,7 @@
     "origin_required": "Ange en origin",
     "destination_required": "Ange en destination",
     "my_location_not_configured": "Ingen plats-entitet konfigurerad. Ange my_location_entity i kortets inställningar.",
-    "my_location_unavailable": "Platsen för '{entity}' är inte tillgänglig"
+    "my_location_unavailable": "Platsen för '{entity}' är inte tillgänglig",
+    "gps_unavailable": "Kunde inte hämta enhetens plats. Tillåt platsåtkomst och försök igen."
   }
 }

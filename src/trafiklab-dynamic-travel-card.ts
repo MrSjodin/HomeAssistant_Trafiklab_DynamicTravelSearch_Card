@@ -36,8 +36,8 @@ const CARD_TYPE = 'trafiklab-dynamic-travel-card';
 const CARD_NAME = 'Trafiklab Dynamic Travel Search';
 const CARD_DESC = 'Dynamically search for public transport journeys using the Trafiklab integration.';
 
-type OriginMode = 'my_location' | 'zone' | 'text';
-type DestMode = 'home' | 'person' | 'zone' | 'text';
+type OriginMode = 'my_location' | 'gps' | 'home' | 'zone' | 'text';
+type DestMode = 'home' | 'my_location' | 'gps' | 'person' | 'zone' | 'text';
 
 // Debounce helper
 function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
@@ -69,6 +69,11 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   @state() private _destStopId: string | null = null;
   @state() private _destSuggestions: StopSuggestion[] = [];
   @state() private _destSuggestionsOpen = false;
+
+  // ── GPS / device location state ──
+  @state() private _gpsCoords: { lat: number; lon: number } | null = null;
+  @state() private _gpsLoading = false;
+  private _gpsInitDone = false;
 
   // ── Results state ──
   @state() private _trips: Trip[] = [];
@@ -124,6 +129,49 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     };
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    // GPS init runs in updated() once hass (and entity attributes) are available.
+  }
+
+  protected updated(changed: Map<string, unknown>) {
+    super.updated(changed);
+    if (!changed.has('hass') || !this.hass || this._gpsInitDone) return;
+    this._gpsInitDone = true;
+
+    // Primary path (companion app): read coordinates directly from the HA entity.
+    // The companion app sends device location to HA via device_tracker/person
+    // entities — their attributes are reliable, unlike navigator.geolocation
+    // inside the companion app's WebView.
+    const entityCoords = this._coordsFromEntity();
+    if (entityCoords) {
+      this._gpsCoords = entityCoords;
+      if (this._originMode === 'my_location' || this._originMode === 'gps') {
+        this._originMode = 'gps';
+      }
+      return;
+    }
+
+    // Fallback: browser geolocation (regular browser with permission already granted).
+    if (typeof navigator === 'undefined' || !navigator.permissions) return;
+    navigator.permissions
+      .query({ name: 'geolocation' as PermissionName })
+      .then(result => {
+        if (result.state === 'granted') {
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              this._gpsCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+              if (this._originMode === 'my_location' || this._originMode === 'gps') {
+                this._originMode = 'gps';
+              }
+            },
+            () => {},
+          );
+        }
+      })
+      .catch(() => {});
+  }
+
   // ─────────────────────────────────────────
   // Private helpers
   // ─────────────────────────────────────────
@@ -150,6 +198,89 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   /** Resolve a zone entity to a display name */
   private _zoneName(zoneEntityId: string): string {
     return this._entityName(zoneEntityId);
+  }
+
+  /**
+   * Returns coordinates from the configured my_location_entity attributes.
+   * This is the primary source in the HA companion app (device_tracker/person
+   * entities carry live lat/lon from the app's own location tracking).
+   */
+  private _coordsFromEntity(): { lat: number; lon: number } | null {
+    const entityId = this._config?.my_location_entity || this._findCurrentUserEntity();
+    if (!entityId || !this.hass?.states?.[entityId]) return null;
+    const { latitude, longitude } = this.hass.states[entityId].attributes;
+    if (typeof latitude === 'number' && typeof longitude === 'number') {
+      return { lat: latitude, lon: longitude };
+    }
+    return null;
+  }
+
+  /**
+   * Finds the person.* entity linked to the currently logged-in HA user.
+   * person entities carry a user_id attribute that matches hass.user.id.
+   * Returns null if no match is found.
+   */
+  private _findCurrentUserEntity(): string | null {
+    const userId = this.hass?.user?.id;
+    if (!userId || !this.hass?.states) return null;
+    const match = Object.keys(this.hass.states).find(
+      id => id.startsWith('person.') &&
+        this.hass.states[id].attributes?.user_id === userId,
+    );
+    return match ?? null;
+  }
+
+  /**
+   * Returns true if device location can be obtained — either via an HA entity
+   * (companion app) or via the browser Geolocation API.
+   */
+  private _hasGeolocation(): boolean {
+    if (this._config?.my_location_entity) return true;
+    if (this._findCurrentUserEntity()) return true;
+    return typeof navigator !== 'undefined' && !!navigator.geolocation;
+  }
+
+  /**
+   * Resolve the current device location and activate GPS mode for the given
+   * field. Entity attributes are tried first (companion app); browser
+   * geolocation is used as a fallback for regular browsers.
+   */
+  private _requestGps(target: 'origin' | 'dest') {
+    const setMode = () => {
+      if (target === 'origin') this._originMode = 'gps';
+      else this._destMode = 'gps';
+    };
+
+    // Preferred: read from HA entity (works in companion app WebView).
+    const entityCoords = this._coordsFromEntity();
+    if (entityCoords) {
+      this._gpsCoords = entityCoords;
+      setMode();
+      return;
+    }
+
+    // Fallback: browser Geolocation API.
+    if (!navigator?.geolocation) {
+      this._error = this.t('error.gps_unavailable');
+      return;
+    }
+    if (this._gpsCoords) {
+      setMode();
+      return;
+    }
+    this._gpsLoading = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this._gpsCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        this._gpsLoading = false;
+        setMode();
+      },
+      () => {
+        this._gpsLoading = false;
+        this._error = this.t('error.gps_unavailable');
+      },
+      { timeout: 15000 },
+    );
   }
 
   // ─────────────────────────────────────────
@@ -206,7 +337,6 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   // ─────────────────────────────────────────
 
   private _swap() {
-    // We only swap when both are in text/stop mode; for quick buttons we swap modes
     const prevOriginMode = this._originMode;
     const prevOriginText = this._originText;
     const prevOriginStopId = this._originStopId;
@@ -218,7 +348,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     const prevDestPersonEntity = this._destPersonEntity;
     const prevDestZoneEntity = this._destZoneEntity;
 
-    // Map destination mode to origin mode
+    // Map destination mode → origin mode
     if (prevDestMode === 'text') {
       this._originMode = 'text';
       this._originText = prevDestText;
@@ -226,30 +356,36 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     } else if (prevDestMode === 'zone') {
       this._originMode = 'zone';
       this._originZoneEntity = prevDestZoneEntity;
+    } else if (prevDestMode === 'home') {
+      this._originMode = 'home';
+    } else if (prevDestMode === 'gps') {
+      this._originMode = 'gps';
     } else {
-      // home / person → switch origin to 'my_location' or text
+      // my_location / person → origin my_location
       this._originMode = 'my_location';
     }
     this._originSuggestions = [];
     this._originSuggestionsOpen = false;
 
-    // Map origin mode to destination mode
-    if (prevOriginMode === 'my_location') {
-      this._destMode = 'text';
-      this._destText = '';
-      this._destStopId = null;
-    } else if (prevOriginMode === 'zone') {
-      this._destMode = 'zone';
-      this._destZoneEntity = prevOriginZoneEntity;
-    } else {
+    // Map origin mode → destination mode
+    if (prevOriginMode === 'text') {
       this._destMode = 'text';
       this._destText = prevOriginText;
       this._destStopId = prevOriginStopId;
+    } else if (prevOriginMode === 'zone') {
+      this._destMode = 'zone';
+      this._destZoneEntity = prevOriginZoneEntity;
+    } else if (prevOriginMode === 'home') {
+      this._destMode = 'home';
+    } else if (prevOriginMode === 'gps') {
+      this._destMode = 'gps';
+    } else {
+      // my_location → dest my_location
+      this._destMode = 'my_location';
     }
     this._destSuggestions = [];
     this._destSuggestionsOpen = false;
 
-    // Reset unused destination fields
     this._destPersonEntity = prevDestPersonEntity;
   }
 
@@ -272,6 +408,19 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       }
       originValue = entity;
       originType = 'person';
+    } else if (this._originMode === 'home') {
+      originValue = this._config.home_zone || 'zone.home';
+      originType = 'zone';
+    } else if (this._originMode === 'gps') {
+      // Always refresh from entity at search time so coordinates are current.
+      const fresh = this._coordsFromEntity();
+      if (fresh) this._gpsCoords = fresh;
+      if (!this._gpsCoords) {
+        this._error = this.t('error.gps_unavailable');
+        return;
+      }
+      originValue = `${this._gpsCoords.lat},${this._gpsCoords.lon}`;
+      originType = 'coordinates';
     } else if (this._originMode === 'zone') {
       if (!this._originZoneEntity) {
         this._error = this.t('error.origin_required');
@@ -300,6 +449,24 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     if (this._destMode === 'home') {
       destinationValue = this._config.home_zone || 'zone.home';
       destinationType = 'zone';
+    } else if (this._destMode === 'my_location') {
+      const entity = this._config.my_location_entity;
+      if (!entity) {
+        this._error = this.t('error.my_location_not_configured');
+        return;
+      }
+      destinationValue = entity;
+      destinationType = 'person';
+    } else if (this._destMode === 'gps') {
+      // Always refresh from entity at search time so coordinates are current.
+      const freshDest = this._coordsFromEntity();
+      if (freshDest) this._gpsCoords = freshDest;
+      if (!this._gpsCoords) {
+        this._error = this.t('error.gps_unavailable');
+        return;
+      }
+      destinationValue = `${this._gpsCoords.lat},${this._gpsCoords.lon}`;
+      destinationType = 'coordinates';
     } else if (this._destMode === 'person') {
       if (!this._destPersonEntity) {
         this._error = this.t('error.destination_required');
@@ -331,6 +498,10 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     // Compute display labels so coordinate-only names can be replaced in results
     if (this._originMode === 'my_location') {
       this._originLabel = this.t('search.my_location');
+    } else if (this._originMode === 'home') {
+      this._originLabel = this._zoneName(this._config.home_zone || 'zone.home');
+    } else if (this._originMode === 'gps') {
+      this._originLabel = this.t('search.gps_location');
     } else if (this._originMode === 'zone') {
       this._originLabel = this._zoneName(this._originZoneEntity);
     } else {
@@ -338,6 +509,10 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     }
     if (this._destMode === 'home') {
       this._destLabel = this._zoneName(this._config.home_zone || 'zone.home');
+    } else if (this._destMode === 'my_location') {
+      this._destLabel = this.t('search.my_location');
+    } else if (this._destMode === 'gps') {
+      this._destLabel = this.t('search.gps_location');
     } else if (this._destMode === 'person') {
       this._destLabel = this._entityName(this._destPersonEntity);
     } else if (this._destMode === 'zone') {
@@ -462,6 +637,18 @@ export class TrafiklabDynamicTravelCard extends LitElement {
                 @click=${() => { this._originMode = 'my_location'; }}
               >${this._renderIcon(iconPerson)} ${t('search.my_location')}</button>`
             : nothing}
+          ${this._hasGeolocation()
+            ? html`<button
+                class="quick-btn ${this._originMode === 'gps' ? 'active' : ''}"
+                ?disabled=${this._gpsLoading}
+                @click=${() => this._requestGps('origin')}
+              >${this._renderIcon(this._gpsLoading ? iconLoading : mapMarker)}
+              ${this._gpsCoords ? t('search.gps_location') : t('search.get_gps')}</button>`
+            : nothing}
+          <button
+            class="quick-btn ${this._originMode === 'home' ? 'active' : ''}"
+            @click=${() => { this._originMode = 'home'; }}
+          >${this._renderIcon(iconHome)} ${t('search.home')}</button>
           <button
             class="quick-btn ${this._originMode === 'zone' ? 'active' : ''}"
             @click=${() => { this._originMode = 'zone'; }}
@@ -523,6 +710,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
 
   private _renderDestinationSection() {
     const t = (p: string) => this.t(p);
+    const hasMyLocation = !!this._config.my_location_entity;
     const persons = this._config.persons ?? [];
     const zones = this._availableZones();
 
@@ -530,6 +718,20 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       <div class="search-section">
         <div class="section-label">${t('search.destination_label')}</div>
         <div class="quick-buttons">
+          ${hasMyLocation
+            ? html`<button
+                class="quick-btn ${this._destMode === 'my_location' ? 'active' : ''}"
+                @click=${() => { this._destMode = 'my_location'; }}
+              >${this._renderIcon(iconPerson)} ${t('search.my_location')}</button>`
+            : nothing}
+          ${this._hasGeolocation()
+            ? html`<button
+                class="quick-btn ${this._destMode === 'gps' ? 'active' : ''}"
+                ?disabled=${this._gpsLoading}
+                @click=${() => this._requestGps('dest')}
+              >${this._renderIcon(this._gpsLoading ? iconLoading : mapMarker)}
+              ${this._gpsCoords ? t('search.gps_location') : t('search.get_gps')}</button>`
+            : nothing}
           <button
             class="quick-btn ${this._destMode === 'home' ? 'active' : ''}"
             @click=${() => { this._destMode = 'home'; }}

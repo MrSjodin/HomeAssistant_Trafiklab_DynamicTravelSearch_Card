@@ -33,6 +33,11 @@ export interface Hass {
   states: Record<string, HassEntity>;
   locale?: { language?: string };
   language?: string;
+  user?: {
+    /** HA user ID — matches person entity's user_id attribute. */
+    id: string;
+    name: string;
+  };
   callService(
     domain: string,
     service: string,
