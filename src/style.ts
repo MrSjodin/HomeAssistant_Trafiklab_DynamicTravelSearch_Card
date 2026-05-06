@@ -470,4 +470,13 @@ export const cardStyles = css`
     border-radius: 10px;
     padding: 1px 7px;
   }
+  .tl-platform-badge {
+    display: inline-block;
+    font-size: 0.78em;
+    font-weight: 500;
+    color: var(--primary-text-color);
+    background: var(--secondary-background-color, rgba(128,128,128,0.12));
+    border-radius: 10px;
+    padding: 1px 7px;
+  }
 `;
