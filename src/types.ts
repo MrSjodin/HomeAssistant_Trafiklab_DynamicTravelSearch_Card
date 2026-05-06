@@ -23,8 +23,8 @@ export interface DynamicTravelCardConfig {
   max_items?: number;
   /** Maximum number of legs rendered per trip. */
   max_legs?: number;
-  /** Show 3-line detail rows under each leg. */
-  show_details?: boolean;
+  /** Request platform information from the search service. */
+  include_platform?: boolean;
   /** Maximum walking distance at origin / destination in metres. */
   max_walking_distance?: number;
 }
@@ -86,6 +86,7 @@ export type Leg = {
   dest_time?: string;
   duration?: number;
   distance?: number;
+  platform?: string;
 };
 
 export type StopLike = {
