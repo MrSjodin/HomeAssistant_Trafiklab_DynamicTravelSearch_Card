@@ -15,11 +15,15 @@ export const cardStyles = css`
   }
 
   /* ── Search form ── */
+  .search-box {
+    background: var(--secondary-background-color, rgba(128,128,128,0.08));
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
   .search-section {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 12px;
   }
   .section-label {
     font-size: 0.8em;
@@ -40,7 +44,7 @@ export const cardStyles = css`
     gap: 4px;
     padding: 6px 10px;
     border-radius: 20px;
-    border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+    border: 1px solid var(--divider-color, rgba(128,128,128,0.18));
     background: var(--ha-card-background, var(--card-background-color, #fff));
     color: var(--primary-text-color);
     font-size: 0.85em;
@@ -49,7 +53,7 @@ export const cardStyles = css`
     white-space: nowrap;
   }
   .quick-btn:hover {
-    background: var(--secondary-background-color, rgba(0,0,0,0.05));
+    background: var(--secondary-background-color, rgba(128,128,128,0.10));
   }
   .quick-btn.active {
     background: var(--primary-color);
@@ -69,7 +73,7 @@ export const cardStyles = css`
     box-sizing: border-box;
     padding: 8px 10px;
     border-radius: 8px;
-    border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+    border: 1px solid var(--divider-color, rgba(128,128,128,0.18));
     background: var(--ha-card-background, var(--card-background-color, #fff));
     color: var(--primary-text-color);
     font-size: 0.9em;
@@ -88,9 +92,9 @@ export const cardStyles = css`
     top: calc(100% + 2px);
     z-index: 100;
     background: var(--card-background-color, #fff);
-    border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+    border: 1px solid var(--divider-color, rgba(128,128,128,0.18));
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     max-height: 200px;
     overflow-y: auto;
   }
@@ -101,13 +105,13 @@ export const cardStyles = css`
     display: flex;
     flex-direction: column;
     gap: 2px;
-    border-bottom: 1px solid var(--divider-color, rgba(0,0,0,0.06));
+    border-bottom: 1px solid var(--divider-color, rgba(128,128,128,0.12));
   }
   .suggestion-item:last-child {
     border-bottom: none;
   }
   .suggestion-item:hover {
-    background: var(--secondary-background-color, rgba(0,0,0,0.04));
+    background: var(--secondary-background-color, rgba(128,128,128,0.08));
   }
   .suggestion-name {
     font-weight: 500;
@@ -121,9 +125,7 @@ export const cardStyles = css`
   .action-row {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
-    margin: 4px 0 4px 0;
+    margin: 6px 0;
   }
   /* ── Search row ── */
   .search-row {
@@ -134,17 +136,26 @@ export const cardStyles = css`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
-    background: var(--ha-card-background, var(--card-background-color, #fff));
-    color: var(--primary-text-color);
+    gap: 6px;
+    flex: 1;
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+    font-size: 0.95em;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.15s;
+    font-family: inherit;
   }
   .swap-btn:hover {
-    background: var(--secondary-background-color, rgba(0,0,0,0.05));
+    background: var(--primary-color);
+    color: var(--text-primary-color, #fff);
+  }
+  .swap-btn ha-icon {
+    --mdc-icon-size: 18px;
   }
   .search-btn {
     display: inline-flex;
@@ -183,7 +194,7 @@ export const cardStyles = css`
     padding: 10px 12px;
     border-radius: 8px;
     background: var(--error-color, #db4437);
-    color: #fff;
+    color: var(--text-primary-color, #fff);
     font-size: 0.88em;
     margin-bottom: 8px;
   }
@@ -209,16 +220,16 @@ export const cardStyles = css`
     gap: var(--tl-trip-gap, 4px);
     padding: 8px 10px;
     border-radius: 10px;
-    background: var(--secondary-background-color, rgba(0,0,0,0.03));
+    background: var(--secondary-background-color, rgba(128,128,128,0.08));
     cursor: pointer;
     user-select: none;
     transition: background 0.15s;
   }
   .trip:hover {
-    background: var(--secondary-background-color, rgba(0,0,0,0.06));
+    background: var(--secondary-background-color, rgba(128,128,128,0.12));
   }
   .trip--expanded {
-    background: var(--secondary-background-color, rgba(0,0,0,0.05));
+    background: var(--secondary-background-color, rgba(128,128,128,0.10));
   }
   .leg {
     display: inline-flex;
@@ -226,8 +237,8 @@ export const cardStyles = css`
     gap: 4px;
     padding: var(--tl-pill-padding-y, 4px) var(--tl-pill-padding-x, 8px);
     border-radius: var(--tl-pill-radius, 12px);
-    background: var(--tl-leg-pill-bg, var(--ha-card-background, rgba(0,0,0,0.06)));
-    box-shadow: inset 0 0 0 1px var(--divider-color, rgba(0,0,0,0.1));
+    background: var(--tl-leg-pill-bg, var(--ha-card-background, rgba(128,128,128,0.12)));
+    box-shadow: inset 0 0 0 1px var(--divider-color, rgba(128,128,128,0.15));
     font-size: var(--tl-font-size-leg, 0.85em);
   }
   .leg ha-icon {
@@ -247,11 +258,11 @@ export const cardStyles = css`
   }
   .leg-endpoint.start {
     background: var(--tl-start-pill-bg, var(--success-color, #43a047));
-    color: #fff;
+    color: var(--text-primary-color, #fff);
   }
   .leg-endpoint.end {
     background: var(--tl-end-pill-bg, var(--primary-color));
-    color: #fff;
+    color: var(--text-primary-color, #fff);
   }
   .leg-endpoint ha-icon {
     --mdc-icon-size: var(--tl-icon-size, 16px);
@@ -265,10 +276,25 @@ export const cardStyles = css`
     --mdc-icon-size: 16px;
   }
   .trip-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
     font-size: var(--tl-font-size-leg, 0.85em);
     font-weight: 600;
     color: var(--secondary-text-color);
     padding: 0 2px;
+  }
+  .trip-time ha-icon {
+    --mdc-icon-size: 13px;
+    opacity: 0.65;
+  }
+  .trip-time--dep ha-icon {
+    color: var(--success-color, #43a047);
+    opacity: 0.8;
+  }
+  .trip-time--arr ha-icon {
+    color: var(--primary-color);
+    opacity: 0.8;
   }
   .trip-meta {
     width: 100%;
@@ -346,7 +372,7 @@ export const cardStyles = css`
     width: 100%;
     margin-top: 8px;
     padding-top: 10px;
-    border-top: 1px solid var(--divider-color, rgba(0,0,0,0.08));
+    border-top: 1px solid var(--divider-color, rgba(128,128,128,0.15));
     animation: tl-slide-in 0.18s ease;
     overflow: hidden;
   }
@@ -395,7 +421,7 @@ export const cardStyles = css`
   .tl-line-seg {
     width: 2px;
     flex: 1;
-    background: var(--divider-color, rgba(0,0,0,0.2));
+    background: var(--divider-color, rgba(128,128,128,0.30));
     min-height: 8px;
   }
   .tl-stop-cell {
@@ -440,7 +466,7 @@ export const cardStyles = css`
     font-size: 0.78em;
     font-weight: 500;
     color: var(--secondary-text-color);
-    background: var(--secondary-background-color, rgba(0,0,0,0.06));
+    background: var(--secondary-background-color, rgba(128,128,128,0.12));
     border-radius: 10px;
     padding: 1px 7px;
   }
