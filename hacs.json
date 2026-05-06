@@ -1,5 +1,6 @@
 {
   "name": "Trafiklab Dynamic Travel Search Card",
-  "render_readme": true,
-  "filename": "trafiklab-dynamic-travel-card.js"
+  "filename": "trafiklab-dynamic-travel-card.js",
+  "country": ["NO", "SE", "DK", "FI"],
+  "render_readme": true
 }
