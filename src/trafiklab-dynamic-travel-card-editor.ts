@@ -1,12 +1,13 @@
 import { LitElement, html, css } from 'lit';
+import { property, state } from 'lit/decorators.js';
 import { localize } from './localize';
 import type { DynamicTravelCardConfig } from './types';
 
 type HomeAssistant = any;
 
 export class TrafiklabDynamicTravelCardEditor extends LitElement {
-  public hass?: HomeAssistant;
-  private _config?: DynamicTravelCardConfig;
+  @property({ attribute: false }) public hass?: HomeAssistant;
+  @state() private _config?: DynamicTravelCardConfig;
 
   setConfig(config: DynamicTravelCardConfig) {
     const base: DynamicTravelCardConfig = {
@@ -35,9 +36,6 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
     } else if (key === 'max_legs' || key === 'max_items' || key === 'max_walking_distance') {
       const n = Number(value);
       if (!Number.isNaN(n)) value = n;
-    } else if (key === 'persons' || key === 'zones') {
-      // Convert comma-separated string to array
-      value = String(value).split(',').map((s: string) => s.trim()).filter(Boolean);
     }
 
     if (value !== undefined) newConfig[key] = value;
@@ -61,7 +59,12 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
       include_platform: !!value.include_platform,
       max_items: typeof value.max_items === 'number' ? value.max_items : Number(value.max_items) || 3,
       max_walking_distance: typeof value.max_walking_distance === 'number' ? value.max_walking_distance : Number(value.max_walking_distance) || 1000,
+      show_persons: value.show_persons !== false,
+      show_zones: value.show_zones !== false,
     };
+    // Drop legacy config fields that are now auto-fetched from HA
+    delete (next as any).persons;
+    delete (next as any).zones;
     if (JSON.stringify(next) !== JSON.stringify(this._config)) {
       this._config = next;
       this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: next } }));
@@ -76,9 +79,6 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
     const hasHaForm = !!customElements.get('ha-form');
     const hasTextfield = !!customElements.get('ha-textfield');
 
-    const personsStr = Array.isArray(cfg.persons) ? cfg.persons.join(', ') : (cfg.persons ?? '');
-    const zonesStr = Array.isArray(cfg.zones) ? cfg.zones.join(', ') : (cfg.zones ?? '');
-
     if (hasHaForm) {
       const schema = [
         { name: 'title', selector: { text: {} } },
@@ -89,6 +89,8 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
         { name: 'max_legs', selector: { number: { min: 1, max: 20, mode: 'box' } } },
         { name: 'max_walking_distance', selector: { number: { min: 0, max: 5000, step: 100, mode: 'slider', unit_of_measurement: 'm' } } },
         { name: 'include_platform', selector: { boolean: {} } },
+        { name: 'show_persons', selector: { boolean: {} } },
+        { name: 'show_zones', selector: { boolean: {} } },
       ] as any;
 
       const data: any = {
@@ -100,6 +102,8 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
         max_legs: cfg.max_legs ?? 12,
         max_walking_distance: cfg.max_walking_distance ?? 1000,
         include_platform: cfg.include_platform ?? false,
+        show_persons: cfg.show_persons !== false,
+        show_zones: cfg.show_zones !== false,
       };
 
       return html`
@@ -117,6 +121,8 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
               case 'max_legs': return t('editor.max_legs');
               case 'max_walking_distance': return t('editor.max_walking_distance');
               case 'include_platform': return t('editor.include_platform');
+              case 'show_persons': return t('editor.show_persons');
+              case 'show_zones': return t('editor.show_zones');
               default: return String(s.name);
             }
           }}
@@ -129,42 +135,14 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
               case 'max_legs': return t('editor.help_max_legs');
               case 'max_walking_distance': return t('editor.help_max_walking_distance');
               case 'include_platform': return t('editor.help_include_platform');
+              case 'show_persons': return t('editor.help_show_persons');
+              case 'show_zones': return t('editor.help_show_zones');
               default: return undefined;
             }
           }}
           @value-changed=${this._haFormValueChanged}
         ></ha-form>
 
-        <!-- Person and zone lists cannot be represented with ha-form entity-list selector easily,
-             so we fall back to text fields for those even in ha-form mode -->
-        <div class="extra-fields">
-          <div class="field">
-            <label class="lbl">
-              ${t('editor.persons')}
-              <input
-                type="text"
-                .value=${personsStr}
-                placeholder="person.john, person.jane"
-                data-config-value="persons"
-                @input=${(e: Event) => this._valueChanged(e)}
-              />
-            </label>
-            <div class="help">${t('editor.help_persons')}</div>
-          </div>
-          <div class="field">
-            <label class="lbl">
-              ${t('editor.zones')}
-              <input
-                type="text"
-                .value=${zonesStr}
-                placeholder="zone.work, zone.gym"
-                data-config-value="zones"
-                @input=${(e: Event) => this._valueChanged(e)}
-              />
-            </label>
-            <div class="help">${t('editor.help_zones')}</div>
-          </div>
-        </div>
       `;
     }
 
@@ -195,18 +173,6 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
           <div class="help">${t('editor.help_home_zone')}</div>
         </div>
         <div class="field">
-          <label class="lbl">${t('editor.persons')}
-            <input type="text" .value=${personsStr} placeholder="person.john, person.jane" data-config-value="persons" @input=${(e: Event) => this._valueChanged(e)} />
-          </label>
-          <div class="help">${t('editor.help_persons')}</div>
-        </div>
-        <div class="field">
-          <label class="lbl">${t('editor.zones')}
-            <input type="text" .value=${zonesStr} placeholder="zone.work, zone.gym" data-config-value="zones" @input=${(e: Event) => this._valueChanged(e)} />
-          </label>
-          <div class="help">${t('editor.help_zones')}</div>
-        </div>
-        <div class="field">
           ${hasTextfield
             ? html`<ha-textfield .label=${t('editor.max_items')} .value=${String(cfg.max_items ?? 3)} .configValue=${'max_items'} type="number" min="1" max="10" @value-changed=${this._valueChanged} @input=${this._valueChanged}></ha-textfield>`
             : html`<label class="lbl">${t('editor.max_items')}<input type="number" min="1" max="10" .value=${String(cfg.max_items ?? 3)} data-config-value="max_items" @input=${(e: Event) => this._valueChanged(e)} /></label>`}
@@ -224,6 +190,14 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
         <div class="field">
           <label class="lbl"><input type="checkbox" ?checked=${cfg.include_platform ?? false} data-config-value="include_platform" @change=${(e: Event) => this._valueChanged(e)} /> ${t('editor.include_platform')}</label>
           <div class="help">${t('editor.help_include_platform')}</div>
+        </div>
+        <div class="field">
+          <label class="lbl"><input type="checkbox" ?checked=${cfg.show_persons !== false} data-config-value="show_persons" @change=${(e: Event) => this._valueChanged(e)} /> ${t('editor.show_persons')}</label>
+          <div class="help">${t('editor.help_show_persons')}</div>
+        </div>
+        <div class="field">
+          <label class="lbl"><input type="checkbox" ?checked=${cfg.show_zones !== false} data-config-value="show_zones" @change=${(e: Event) => this._valueChanged(e)} /> ${t('editor.show_zones')}</label>
+          <div class="help">${t('editor.help_show_zones')}</div>
         </div>
       </div>
     `;
