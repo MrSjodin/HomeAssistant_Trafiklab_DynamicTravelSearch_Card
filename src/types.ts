@@ -15,10 +15,11 @@ export interface DynamicTravelCardConfig {
   my_location_entity?: string;
   /** Zone entity ID for the Home quick-button (default: zone.home). */
   home_zone?: string;
-  /** Person / device_tracker entities shown as quick destination buttons. */
-  persons?: string[];
-  /** Zone entity IDs shown as quick destination buttons. */
-  zones?: string[];
+  /** Show HA-defined person buttons as quick destination options (default: true). */
+  show_persons?: boolean;
+  /** Show zone buttons as quick destination/origin options (default: true). */
+  show_zones?: boolean;
+
   /** Maximum number of trips to display. */
   max_items?: number;
   /** Maximum number of legs rendered per trip. */

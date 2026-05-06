@@ -99,15 +99,10 @@ export class TrafiklabDynamicTravelCard extends LitElement {
       max_legs: 12,
       include_platform: false,
       max_walking_distance: 1000,
+      show_persons: true,
+      show_zones: true,
       ...config,
     };
-    // If persons are configured, default destination to first person; otherwise use home
-    if (this._config.persons?.length) {
-      this._destPersonEntity = this._config.persons[0];
-    }
-    if (this._config.zones?.length) {
-      this._destZoneEntity = this._config.zones[0];
-    }
   }
 
   getCardSize() {
@@ -563,7 +558,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   }
 
   // ─────────────────────────────────────────
-  // Zone helpers
+  // Zone / Person helpers
   // ─────────────────────────────────────────
 
   /** Returns all zone.* entities from HA, sorted by friendly name. */
@@ -571,6 +566,18 @@ export class TrafiklabDynamicTravelCard extends LitElement {
     if (!this.hass?.states) return [];
     return Object.keys(this.hass.states)
       .filter(id => id.startsWith('zone.'))
+      .map(id => ({
+        entity_id: id,
+        name: this.hass.states[id].attributes?.friendly_name || id.split('.').pop() || id,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /** Returns all person.* entities from HA, sorted by friendly name. */
+  private _availablePersons(): Array<{ entity_id: string; name: string }> {
+    if (!this.hass?.states) return [];
+    return Object.keys(this.hass.states)
+      .filter(id => id.startsWith('person.'))
       .map(id => ({
         entity_id: id,
         name: this.hass.states[id].attributes?.friendly_name || id.split('.').pop() || id,
@@ -630,7 +637,8 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   private _renderOriginSection() {
     const t = (p: string) => this.t(p);
     const hasMyLocation = !!this._config.my_location_entity;
-    const zones = this._availableZones();
+    const showZones = this._config.show_zones !== false;
+    const zones = showZones ? this._availableZones() : [];
 
     return html`
       <div class="search-section">
@@ -654,17 +662,19 @@ export class TrafiklabDynamicTravelCard extends LitElement {
             class="quick-btn ${this._originMode === 'home' ? 'active' : ''}"
             @click=${() => { this._originMode = 'home'; }}
           >${this._renderIcon(iconHome)} ${t('search.home')}</button>
-          <button
-            class="quick-btn ${this._originMode === 'zone' ? 'active' : ''}"
-            @click=${() => { this._originMode = 'zone'; }}
-          >${this._renderIcon(iconZone)} ${t('search.zone')}</button>
+          ${showZones
+            ? html`<button
+                class="quick-btn ${this._originMode === 'zone' ? 'active' : ''}"
+                @click=${() => { this._originMode = 'zone'; }}
+              >${this._renderIcon(iconZone)} ${t('search.zone')}</button>`
+            : nothing}
           <button
             class="quick-btn ${this._originMode === 'text' ? 'active' : ''}"
             @click=${() => { this._originMode = 'text'; }}
           >${this._renderIcon(iconSearch)} ${t('search.type_stop')}</button>
         </div>
 
-        ${this._originMode === 'zone'
+        ${showZones && this._originMode === 'zone'
           ? html`
             <select
               class="stop-input"
@@ -716,8 +726,10 @@ export class TrafiklabDynamicTravelCard extends LitElement {
   private _renderDestinationSection() {
     const t = (p: string) => this.t(p);
     const hasMyLocation = !!this._config.my_location_entity;
-    const persons = this._config.persons ?? [];
-    const zones = this._availableZones();
+    const showPersons = this._config.show_persons !== false;
+    const showZones = this._config.show_zones !== false;
+    const persons = showPersons ? this._availablePersons() : [];
+    const zones = showZones ? this._availableZones() : [];
 
     return html`
       <div class="search-section">
@@ -742,17 +754,19 @@ export class TrafiklabDynamicTravelCard extends LitElement {
             @click=${() => { this._destMode = 'home'; }}
           >${this._renderIcon(iconHome)} ${t('search.home')}</button>
 
-          ${persons.map(p => html`
-            <button
-              class="quick-btn ${this._destMode === 'person' && this._destPersonEntity === p ? 'active' : ''}"
-              @click=${() => { this._destMode = 'person'; this._destPersonEntity = p; }}
-            >${this._renderIcon(iconPerson)} ${this._entityName(p)}</button>
-          `)}
+          ${showPersons
+            ? html`<button
+                class="quick-btn ${this._destMode === 'person' ? 'active' : ''}"
+                @click=${() => { this._destMode = 'person'; }}
+              >${this._renderIcon(iconPerson)} ${t('search.person')}</button>`
+            : nothing}
 
-          <button
-            class="quick-btn ${this._destMode === 'zone' ? 'active' : ''}"
-            @click=${() => { this._destMode = 'zone'; }}
-          >${this._renderIcon(iconZone)} ${t('search.zone')}</button>
+          ${showZones
+            ? html`<button
+                class="quick-btn ${this._destMode === 'zone' ? 'active' : ''}"
+                @click=${() => { this._destMode = 'zone'; }}
+              >${this._renderIcon(iconZone)} ${t('search.zone')}</button>`
+            : nothing}
 
           <button
             class="quick-btn ${this._destMode === 'text' ? 'active' : ''}"
@@ -760,7 +774,7 @@ export class TrafiklabDynamicTravelCard extends LitElement {
           >${this._renderIcon(iconSearch)} ${t('search.type_stop')}</button>
         </div>
 
-        ${this._destMode === 'zone'
+        ${showZones && this._destMode === 'zone'
           ? html`
             <select
               class="stop-input"
@@ -769,6 +783,19 @@ export class TrafiklabDynamicTravelCard extends LitElement {
               <option value="" ?selected=${!this._destZoneEntity}>${t('search.select_zone')}</option>
               ${zones.map(z => html`
                 <option value=${z.entity_id} ?selected=${this._destZoneEntity === z.entity_id}>${z.name}</option>
+              `)}
+            </select>`
+          : nothing}
+
+        ${showPersons && this._destMode === 'person'
+          ? html`
+            <select
+              class="stop-input"
+              @change=${(e: Event) => { this._destPersonEntity = (e.target as HTMLSelectElement).value; }}
+            >
+              <option value="" ?selected=${!this._destPersonEntity}>${t('search.select_person')}</option>
+              ${persons.map(p => html`
+                <option value=${p.entity_id} ?selected=${this._destPersonEntity === p.entity_id}>${p.name}</option>
               `)}
             </select>`
           : nothing}
