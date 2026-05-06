@@ -14,7 +14,7 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
       home_zone: 'zone.home',
       max_items: 3,
       max_legs: 12,
-      show_details: false,
+      include_platform: false,
       max_walking_distance: 1000,
     };
     this._config = { ...base, ...config };
@@ -57,8 +57,8 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
       api_key: value.api_key,
       my_location_entity: value.my_location_entity,
       home_zone: value.home_zone || 'zone.home',
-      show_details: !!value.show_details,
       max_legs: typeof value.max_legs === 'number' ? value.max_legs : Number(value.max_legs) || 12,
+      include_platform: !!value.include_platform,
       max_items: typeof value.max_items === 'number' ? value.max_items : Number(value.max_items) || 3,
       max_walking_distance: typeof value.max_walking_distance === 'number' ? value.max_walking_distance : Number(value.max_walking_distance) || 1000,
     };
@@ -74,7 +74,6 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
     if (!cfg) return html``;
 
     const hasHaForm = !!customElements.get('ha-form');
-    const hasSwitch = !!customElements.get('ha-switch');
     const hasTextfield = !!customElements.get('ha-textfield');
 
     const personsStr = Array.isArray(cfg.persons) ? cfg.persons.join(', ') : (cfg.persons ?? '');
@@ -86,10 +85,10 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
         { name: 'config_entry_id', selector: { config_entry: { integration: 'trafiklab' } } },
         { name: 'my_location_entity', selector: { entity: { domain: ['person', 'device_tracker'] } } },
         { name: 'home_zone', selector: { entity: { domain: 'zone' } } },
-        { name: 'show_details', selector: { boolean: {} } },
         { name: 'max_items', selector: { number: { min: 1, max: 10, mode: 'box' } } },
         { name: 'max_legs', selector: { number: { min: 1, max: 20, mode: 'box' } } },
         { name: 'max_walking_distance', selector: { number: { min: 0, max: 5000, step: 100, mode: 'slider', unit_of_measurement: 'm' } } },
+        { name: 'include_platform', selector: { boolean: {} } },
       ] as any;
 
       const data: any = {
@@ -97,10 +96,10 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
         config_entry_id: cfg.config_entry_id ?? '',
         my_location_entity: cfg.my_location_entity ?? '',
         home_zone: cfg.home_zone ?? 'zone.home',
-        show_details: cfg.show_details ?? false,
         max_items: cfg.max_items ?? 3,
         max_legs: cfg.max_legs ?? 12,
         max_walking_distance: cfg.max_walking_distance ?? 1000,
+        include_platform: cfg.include_platform ?? false,
       };
 
       return html`
@@ -114,10 +113,10 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
               case 'config_entry_id': return t('editor.config_entry_id');
               case 'my_location_entity': return t('editor.my_location_entity');
               case 'home_zone': return t('editor.home_zone');
-              case 'show_details': return t('editor.show_details');
               case 'max_items': return t('editor.max_items');
               case 'max_legs': return t('editor.max_legs');
               case 'max_walking_distance': return t('editor.max_walking_distance');
+              case 'include_platform': return t('editor.include_platform');
               default: return String(s.name);
             }
           }}
@@ -129,6 +128,7 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
               case 'max_items': return t('editor.help_max_items');
               case 'max_legs': return t('editor.help_max_legs');
               case 'max_walking_distance': return t('editor.help_max_walking_distance');
+              case 'include_platform': return t('editor.help_include_platform');
               default: return undefined;
             }
           }}
@@ -207,13 +207,6 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
           <div class="help">${t('editor.help_zones')}</div>
         </div>
         <div class="field">
-          ${hasSwitch
-            ? html`<ha-formfield .label=${t('editor.show_details')}>
-                <ha-switch .checked=${cfg.show_details ?? false} .configValue=${'show_details'} @change=${this._valueChanged}></ha-switch>
-              </ha-formfield>`
-            : html`<label class="lbl"><input type="checkbox" ?checked=${cfg.show_details} data-config-value="show_details" @change=${(e: Event) => this._valueChanged(e)} /> ${t('editor.show_details')}</label>`}
-        </div>
-        <div class="field">
           ${hasTextfield
             ? html`<ha-textfield .label=${t('editor.max_items')} .value=${String(cfg.max_items ?? 3)} .configValue=${'max_items'} type="number" min="1" max="10" @value-changed=${this._valueChanged} @input=${this._valueChanged}></ha-textfield>`
             : html`<label class="lbl">${t('editor.max_items')}<input type="number" min="1" max="10" .value=${String(cfg.max_items ?? 3)} data-config-value="max_items" @input=${(e: Event) => this._valueChanged(e)} /></label>`}
@@ -227,6 +220,10 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
           ${hasTextfield
             ? html`<ha-textfield .label=${t('editor.max_walking_distance')} .value=${String(cfg.max_walking_distance ?? 1000)} .configValue=${'max_walking_distance'} type="number" min="0" max="5000" @value-changed=${this._valueChanged} @input=${this._valueChanged}></ha-textfield>`
             : html`<label class="lbl">${t('editor.max_walking_distance')}<input type="number" min="0" max="5000" .value=${String(cfg.max_walking_distance ?? 1000)} data-config-value="max_walking_distance" @input=${(e: Event) => this._valueChanged(e)} /></label>`}
+        </div>
+        <div class="field">
+          <label class="lbl"><input type="checkbox" ?checked=${cfg.include_platform ?? false} data-config-value="include_platform" @change=${(e: Event) => this._valueChanged(e)} /> ${t('editor.include_platform')}</label>
+          <div class="help">${t('editor.help_include_platform')}</div>
         </div>
       </div>
     `;
