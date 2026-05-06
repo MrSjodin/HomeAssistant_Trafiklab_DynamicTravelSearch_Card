@@ -11,8 +11,8 @@
     "zones": "Zon-entiteter (kommaseparerade)",
     "max_items": "Max antal resor",
     "max_legs": "Max antal delresor",
-    "show_details": "Visa detaljinformation per delresa",
     "max_walking_distance": "Max gångavstånd (m)",
+    "include_platform": "Inkludera plattform/lägeinfo",
     "help_config_entry_id": "Konfigurations-ID för en Resrobot-sensor (ger API-nyckeln)",
     "help_api_key": "Direkt Resrobot API-nyckel (alternativ till konfigurations-ID)",
     "help_my_location_entity": "Person- eller device_tracker-entitet för knappen 'Min plats'",
@@ -21,8 +21,8 @@
     "help_zones": "Zon-entiteter som visas som snabb destinationsknapp",
     "help_max_items": "Maximalt antal resor som visas",
     "help_max_legs": "Maximalt antal delresor per resa",
-    "help_show_details": "Visa detaljerad information per delresa (origin, destination, tider)",
-    "help_max_walking_distance": "Maximalt gångavstånd i meter vid origin och destination"
+    "help_max_walking_distance": "Maximalt gångavstånd i meter vid origin och destination",
+    "help_include_platform": "Begär plattform/lägesbeteckning från söktjänsten"
   },
   "search": {
     "origin_label": "Från",
@@ -52,6 +52,7 @@
     "mode_boat": "Båt",
     "mode_taxi": "Taxi",
     "transfer": "Byte",
+    "platform": "Plattform/Läge",
     "start": "Start",
     "end": "Slut",
     "duration": "{h}t {m}min",
