@@ -17,7 +17,7 @@ All [screenshots below](#Screenshots)
 
 ## Requirements
 - Home Assistant 2023.7+ (service response support)
-- [Trafiklab Integration](https://github.com/MrSjodin/HomeAssistant_Trafiklab_Integration) with at least one Resrobot travel search config entry
+- [Trafiklab Integration](https://github.com/MrSjodin/HomeAssistant_Trafiklab_Integration) v1.0.0 or later, preferrably with at least one Resrobot travel search config entry
 
 ## Installation
 
