@@ -8,8 +8,8 @@ All [screenshots below](#Screenshots)
 
 ## Features
 - **My Location → Home** quick-search buttons
-- **My Location → Person** quick-search (shows a button per configured person entity)
-- **My Location → Zone** quick-search (shows a button per configured HA zone entity)
+- **My Location → Person** quick-search (shows a button for each `person.*` entity defined in HA, toggleable via `show_persons`)
+- **My Location → Zone** quick-search (shows a button for each `zone.*` entity defined in HA, toggleable via `show_zones`)
 - **Free-text origin and destination** with live stop autocomplete (uses `trafiklab.stop_lookup` service)
 - **Swap** button to reverse origin ↔ destination
 - Results show trips: start/end endpoint pills, transport-mode pills with line numbers, optional 3-line per-leg details
@@ -46,33 +46,35 @@ Note: The card is to be included as default in HACS, however the HACS team has s
 ```yaml
 type: custom:trafiklab-dynamic-travel-card
 title: Find a route
-# config_entry_id resolves the Resrobot API key automatically:
+# config_entry_id resolves the Resrobot API key automatically (leave blank for auto-detection):
 config_entry_id: <your_trafiklab_config_entry_id>
+# Optional: person or device_tracker entity for My Location (leave blank for auto-detection):
+my_location_entity: person.jane
 # Zone entity for the Home button (default: zone.home):
 home_zone: zone.home
-# Optional: person entities shown as quick destination buttons:
-persons:
-  - person.jane
-  - person.alice
+# Show all HA-defined person entities as quick destination buttons (default: true):
+show_persons: true
+# Show all HA-defined zone entities as quick origin/destination buttons (default: true):
+show_zones: true
 max_items: 3
 max_legs: 12
 max_walking_distance: 1000
-include_platform: true
+include_platform: false
 ```
 
 ## Configuration options
 | Option | Default | Description |
 |---|---|---|
-| `config_entry_id` | — | Config entry ID of a Resrobot travel sensor (resolves the API key) |
+| `config_entry_id` | — | Config entry ID of a Resrobot travel sensor (resolves the API key). Leave blank for auto-detection. |
 | `api_key` | — | Direct Resrobot API key (alternative to `config_entry_id`) |
-| `my_location_entity` | — | `person.*` or `device_tracker.*` entity for the **My Location** button |
+| `my_location_entity` | — | `person.*` or `device_tracker.*` entity for the **My Location** button. Leave blank to auto-detect the current HA user's person entity. |
 | `home_zone` | `zone.home` | Zone entity for the **Home** quick-destination button |
-| `persons` | `[]` | List of `person.*` / `device_tracker.*` entity IDs shown as quick-destination buttons |
-| `zones` | `[]` | List of `zone.*` entity IDs shown as quick-destination buttons |
+| `show_persons` | `true` | Show all HA-defined `person.*` entities as quick-destination buttons |
+| `show_zones` | `true` | Show all HA-defined `zone.*` entities as quick origin/destination buttons |
 | `max_items` | `3` | Maximum number of trips to display |
 | `max_legs` | `12` | Maximum number of legs rendered per trip |
 | `max_walking_distance` | `1000` | Maximum walking distance in metres at origin/destination |
-| `include_platform` | `[]` | Wether to request the platform for a leg in a trip |
+| `include_platform` | `false` | Whether to request the platform/stop designator for each leg |
 
 ## How it works
 1. User selects or types an **origin** (My Location, or free-text stop name / stop ID).
