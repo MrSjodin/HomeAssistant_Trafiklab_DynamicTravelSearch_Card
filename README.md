@@ -2,7 +2,9 @@
 
 A Home Assistant Lovelace card for **on-the-fly** public transport journey searches using the [Trafiklab integration](https://github.com/MrSjodin/HomeAssistant_Trafiklab_Integration)'s `travel_search` service.
 
-![card](./assets/preview.png) ![card](./assets/preview_2.png) ![card](./assets/preview_3.png) ![card](./assets/preview_4.png)
+![card](./assets/preview.png)
+
+All [screenshots below](#Screenshots)
 
 ## Features
 - **My Location → Home** quick-search buttons
@@ -78,6 +80,10 @@ include_platform: true
 3. Pressing **Search** calls `trafiklab.travel_search` and displays the returned trips.
 4. For free-text inputs, typing triggers `trafiklab.stop_lookup` to show autocomplete suggestions.
 5. The **⇅** button swaps origin and destination.
+
+## Screenshots
+![card](./assets/preview.png) ![card](./assets/preview_2.png)
+![card](./assets/preview_3.png) ![card](./assets/preview_4.png)
 
 ## Development
 ```bash
