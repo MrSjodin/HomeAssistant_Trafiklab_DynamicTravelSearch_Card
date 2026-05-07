@@ -49,7 +49,7 @@ export class TrafiklabDynamicTravelCardEditor extends LitElement {
   private _haFormValueChanged(e: CustomEvent) {
     const value = (e.detail as any)?.value || {};
     const next: DynamicTravelCardConfig = {
-      ...(this._config || { type: 'trafiklab-dynamic-travel-card' }),
+      ...(this._config || { type: 'custom:trafiklab-dynamic-travel-card' }),
       title: value.title,
       config_entry_id: value.config_entry_id,
       api_key: value.api_key,
