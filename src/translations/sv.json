@@ -60,6 +60,7 @@
     "duration": "{h}t {m}min",
     "duration_min": "{m}min"
   },
+  "attribution": "Data från Trafiklab.se",
   "error": {
     "search_failed": "Sökning misslyckades: {message}",
     "no_api_key": "Ingen Resrobot API-nyckel konfigurerad. Ange config_entry_id eller api_key i kortets inställningar.",
