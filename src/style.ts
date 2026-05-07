@@ -479,4 +479,10 @@ export const cardStyles = css`
     border-radius: 10px;
     padding: 1px 7px;
   }
+  .attribution {
+    font-size: 0.72em;
+    color: var(--disabled-text-color, rgba(128,128,128,0.55));
+    text-align: left;
+    padding-top: 8px;
+  }
 `;

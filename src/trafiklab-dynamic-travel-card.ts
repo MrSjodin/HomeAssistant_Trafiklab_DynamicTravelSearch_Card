@@ -630,6 +630,8 @@ export class TrafiklabDynamicTravelCard extends LitElement {
           : nothing}
 
         ${this._hasSearched ? this._renderResults() : nothing}
+
+        <div class="attribution">${t('attribution')}</div>
       </ha-card>
     `;
   }

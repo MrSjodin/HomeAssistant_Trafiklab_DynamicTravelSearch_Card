@@ -86,6 +86,7 @@ include_platform: false
 ## Screenshots
 ![card](./assets/preview.png) ![card](./assets/preview_2.png)
 ![card](./assets/preview_3.png) ![card](./assets/preview_4.png)
+![card](./assets/preview_5.png)
 
 ## Development
 ```bash
